@@ -2,6 +2,7 @@ const Authentication = require("../models/authentication");
 const asyncHandler = require("express-async-handler");
 const { body, validationResult } = require("express-validator");
 const { DateTime } = require("luxon");
+const bcrypt = require('bcrypt');
 
 exports.index = asyncHandler(async (req, res, next) => {
   res.send("NOT IMPLEMENTED: Site Home Page");
@@ -65,11 +66,12 @@ exports.post_authentication = [
   asyncHandler(async (req, res, next) => {
     try {
       const errors = validationResult(req);
+      const hashedPassword = await bcrypt.hash(req.body.authentication.password, 10);
       const authentication = new Authentication({
         created_at: req.body.authentication.created_at,
         name: req.body.authentication.name,
         login: req.body.authentication.login,
-        password: req.body.authentication.password,
+        password: hashedPassword,
         status: req.body.authentication.status,
         type: req.body.authentication.type,
         updated_at: req.body.authentication.updated_at
