@@ -65,11 +65,12 @@ exports.post_user = [
   asyncHandler(async (req, res, next) => {
     try {
       const errors = validationResult(req);
+      const hashedPassword = await bcrypt.hash(req.body.authentication.password, 10);
       const user = new User({
         created_at: req.body.user.created_at,
         name: req.body.user.name,
         login: req.body.user.login,
-        password: req.body.user.password,
+        password: hashedPassword,
         status: req.body.user.status,
         type: req.body.user.type,
         updated_at: req.body.user.updated_at
