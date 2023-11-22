@@ -12,7 +12,7 @@ router.get("/verify-authentication/:id", authentication_controller.get_verify_au
 // GET request for list of all authentication items.
 router.get("/list-authentications", authentication_controller.list_authentications);
 // POST request for creating an authentication ticket.
-router.post("/authenticate", authentication_controller.post_authentication);
+router.post("/create-access-token", authentication_controller.post_authentication);
 
 /// USER ROUTES ///
 

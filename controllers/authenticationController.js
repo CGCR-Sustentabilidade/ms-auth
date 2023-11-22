@@ -1,4 +1,5 @@
 const Authentication = require("../models/authentication");
+const utils_bcrypt = require("../utils/hash_utils")
 const asyncHandler = require("express-async-handler");
 const { body, validationResult } = require("express-validator");
 const { DateTime } = require("luxon");
@@ -66,6 +67,7 @@ exports.post_authentication = [
   asyncHandler(async (req, res, next) => {
     try {
       const errors = validationResult(req);
+<<<<<<< Updated upstream
       const hashedPassword = await bcrypt.hash(req.body.authentication.password, 10);
       const authentication = new Authentication({
         created_at: req.body.authentication.created_at,
@@ -75,29 +77,42 @@ exports.post_authentication = [
         status: req.body.authentication.status,
         type: req.body.authentication.type,
         updated_at: req.body.authentication.updated_at
+=======
+      console.log("\n\n teste")
+      console.log("\n\n req.body.authentication.password: ", req.body.access_token.password)
+      const hashedPassword = await utils_bcrypt.ConvStringToHash(req.body.access_token.password);
+      console.log("\n\n hashedPassword: ", hashedPassword)
+      const access_token = new Authentication({
+        created_at: req.body.access_token.created_at,
+        login: req.body.access_token.login,
+        password: hashedPassword,
+        status: req.body.access_token.status,
+        access_token: req.body.access_token.access_token,
+>>>>>>> Stashed changes
       });
 
       // Handle empty date values
-      if (authentication != null) {
-        if (!authentication.created_at)
-          authentication.created_at = DateTime.now()
-        if (!authentication.updated_at)
-          authentication.updated_at = DateTime.now()
+      if (access_token != null) {
+        if (!access_token.created_at)
+          access_token.created_at = DateTime.now()
       }
+
+      // Testar se usuário e senha batem com o banco
+      // Testes...
 
       if (errors.isEmpty()) {
         const err = new Error("Invalid Authentication fields!");
         err.status = 400;
         return next(err);
       } else {
-        const authenticationExists = await Authentication.findOne({ name: req.body.authentication.name }).exec();
+        const authenticationExists = await Authentication.findOne({ login: req.body.access_token.login }).exec();
         if (authenticationExists) {
           const err = new Error("Authentication already exists!");
           err.status = 400;
           return next(err);
         } else {
-          await authentication.save();
-          res.status(200).json(authentication)
+          await access_token.save();
+          res.status(200).json(access_token)
         }
       }
     } catch (error) {
@@ -130,7 +145,13 @@ exports.post_delete_authentication = asyncHandler(async (req, res, next) => {
   }
 });
 
-// Handle authentication update on POST.
+// CRIAR NOVA FUNÇÃO COM LÓGICA DE LOGIN
+// Usuário:
+//     - login
+//     - senha
+
+
+// APAGAR ISSO DEPOIS:
 exports.post_update_authentication = [
   (req, res, next) => {
     if (!(req.body.authentication instanceof Array)) {
