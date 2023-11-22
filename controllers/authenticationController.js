@@ -67,17 +67,6 @@ exports.post_authentication = [
   asyncHandler(async (req, res, next) => {
     try {
       const errors = validationResult(req);
-<<<<<<< Updated upstream
-      const hashedPassword = await bcrypt.hash(req.body.authentication.password, 10);
-      const authentication = new Authentication({
-        created_at: req.body.authentication.created_at,
-        name: req.body.authentication.name,
-        login: req.body.authentication.login,
-        password: hashedPassword,
-        status: req.body.authentication.status,
-        type: req.body.authentication.type,
-        updated_at: req.body.authentication.updated_at
-=======
       console.log("\n\n teste")
       console.log("\n\n req.body.authentication.password: ", req.body.access_token.password)
       const hashedPassword = await utils_bcrypt.ConvStringToHash(req.body.access_token.password);
@@ -88,7 +77,6 @@ exports.post_authentication = [
         password: hashedPassword,
         status: req.body.access_token.status,
         access_token: req.body.access_token.access_token,
->>>>>>> Stashed changes
       });
 
       // Handle empty date values
