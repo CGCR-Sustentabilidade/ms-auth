@@ -1,9 +1,11 @@
 const Authentication = require("../models/authentication");
-const utils_bcrypt = require("../utils/hash_utils")
+const Login = require("../models/login");
+const User = require("../models/user");
 const asyncHandler = require("express-async-handler");
 const { body, validationResult } = require("express-validator");
 const { DateTime } = require("luxon");
-const bcrypt = require('bcrypt');
+const utils_bcrypt = require("../utils/hash_utils")
+const bcrypt = require('bcrypt')
 
 exports.index = asyncHandler(async (req, res, next) => {
   res.send("NOT IMPLEMENTED: Site Home Page");
@@ -56,25 +58,16 @@ exports.post_authentication = [
 
   body("login")
     .trim()
-    .isLength({ min: 1 })
-    .withMessage("Login can't be empty."),
-
-  body("password")
-    .trim()
-    .isLength({ min: 1 })
-    .withMessage("Password can't be empty."),
+    .isLength({ min: 1, max: 30 })
+    .withMessage("Login can't be empty or greater than 30 characters."),
 
   asyncHandler(async (req, res, next) => {
     try {
       const errors = validationResult(req);
-      console.log("\n\n teste")
-      console.log("\n\n req.body.authentication.password: ", req.body.access_token.password)
-      const hashedPassword = await utils_bcrypt.ConvStringToHash(req.body.access_token.password);
-      console.log("\n\n hashedPassword: ", hashedPassword)
+      const hashedPasswordToBeCompared = req.body.access_token.password;
       const access_token = new Authentication({
         created_at: req.body.access_token.created_at,
         login: req.body.access_token.login,
-        password: hashedPassword,
         status: req.body.access_token.status,
         access_token: req.body.access_token.access_token,
       });
@@ -85,23 +78,26 @@ exports.post_authentication = [
           access_token.created_at = DateTime.now()
       }
 
-      // Testar se usuário e senha batem com o banco
-      // Testes...
-
       if (errors.isEmpty()) {
         const err = new Error("Invalid Authentication fields!");
         err.status = 400;
         return next(err);
       } else {
         const authenticationExists = await Authentication.findOne({ login: req.body.access_token.login }).exec();
+        const userExists = await User.findOne({ login: req.body.access_token.login }).exec();
         if (authenticationExists) {
           const err = new Error("Authentication already exists!");
           err.status = 400;
           return next(err);
-        } else {
-          await access_token.save();
-          res.status(200).json(access_token)
-        }
+        } else if(!bcrypt.compareSync(hashedPasswordToBeCompared, userExists.password)) {
+            console.log("400 BAD REQUEST Senha errada!")
+            const err = new Error("Wrong password!");
+            err.status = 400;
+            return next(err);
+          } else {
+            await access_token.save();
+            res.status(200).json(access_token)
+          }
       }
     } catch (error) {
       console.log('error: ', error)
@@ -112,92 +108,55 @@ exports.post_authentication = [
   }),
 ];
 
-// Handle authentication delete on POST.
-exports.post_delete_authentication = asyncHandler(async (req, res, next) => {
-  try {
-    const authentication = await Authentication.findById(req.params.id).exec();
-
-    if (authentication === null) {
-      const err = new Error("Authentication doesn't exists.");
-      err.status = 404;
-      return next(err);
-    }
-
-    await Authentication.findByIdAndRemove(authentication._id);
-    return res.status(200).json({})
-  } catch (error) {
-    console.log('error: ', error)
-    const err = new Error("Error when trying to delete a authentication.");
-    err.status = 400;
-    return next(err);
-  }
-});
-
-// CRIAR NOVA FUNÇÃO COM LÓGICA DE LOGIN
-// Usuário:
-//     - login
-//     - senha
-
-
-// APAGAR ISSO DEPOIS:
-exports.post_update_authentication = [
-  (req, res, next) => {
-    if (!(req.body.authentication instanceof Array)) {
-      if (typeof req.body.authentication === "undefined") {
-        req.body.authentication = [];
-      } else {
-        req.body.authentication = new Array(req.body.authentication);
-      }
-    }
-    next();
-  },
-
-  // Validate and sanitize fields.
-  body("name", "Name must not be empty.")
-    .trim()
-    .isLength({ min: 1 })
-    .escape(),
-
+// Login with user credentials.
+exports.post_login = [
   body("login")
     .trim()
-    .isLength({ min: 1 })
-    .withMessage("Login can't be empty."),
+    .isLength({ min: 1, max: 30 })
+    .withMessage("Login can't be empty or greater than 30 characters."),
 
   body("password")
     .trim()
-    .isLength({ min: 1 })
-    .withMessage("Password can't be empty."),
+    .isLength({ min: 1, max: 20 })
+    .withMessage("Password can't be empty or greater than 20 characters."),
 
   asyncHandler(async (req, res, next) => {
     try {
-      // Extract the validation errors from a request.
+      console.log('body', req.body)
+      console.log('body.login_user', req.body.login_user)
       const errors = validationResult(req);
-
-      // Create a Authentication object with escaped/trimmed data and old id.
-      const authentication = new Authentication({
-        description: req.body.authentication[0].description,
-        name: req.body.authentication[0].name,
-        login: req.body.authentication[0].login,
-        password: req.body.authentication[0].password,
-        status: req.body.authentication[0].status,
-        type: req.body.authentication[0].type,
-        updated_at: DateTime.now(), // new updated_at date
-        _id: req.params.id // This is required, or a new ID will be assigned!
+      const passwordToBeCompared = req.body.login_user.password;
+      const userToBeCompared = new Login({
+        login: req.body.login_user.login,
+        password: req.body.login_user.password,
       });
 
+      // Handle empty login values
+      if (login_user != null) {
+        if (!login_user.login)
+        login_user.login = "aaaaaaaaaaaa"
+      }
+
       if (errors.isEmpty()) {
-        // There are errors. Render form again with sanitized values/error messages.
-        const err = new Error("Invalid Authentication fields to update!");
+        console.log('invalid login fields')
+        const err = new Error("Invalid Login fields!");
         err.status = 400;
         return next(err);
       } else {
-        // Data from form is valid. Update the item.
-        const current_authentication = await Authentication.findByIdAndUpdate(req.params.id, authentication, {});
-        res.status(201).json(authentication)
+        const userExists = await User.findOne({ login: req.body.login_user.login }).exec();
+        if(!bcrypt.compareSync(passwordToBeCompared, userExists.password)) {
+            console.log("Senha errada!")
+            const err = new Error("Wrong password!");
+            err.status = 400;
+            return next(err);
+          } else {
+            await userToBeCompared.save();
+            res.status(200).json(userToBeCompared)
+          }
       }
     } catch (error) {
       console.log('error: ', error)
-      const err = new Error("Error when trying to update a authentication.");
+      const err = new Error("Error when trying to LOGIN.");
       err.status = 400;
       return next(err);
     }

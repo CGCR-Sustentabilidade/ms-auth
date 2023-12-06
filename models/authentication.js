@@ -3,11 +3,10 @@ var mongoose = require("mongoose");
 var Schema = mongoose.Schema;
 
 var AuthenticationSchema = new Schema({
-    created_at: { type: Date },
+    created_at: { type: Date, required: false },
     login: { type: String, required: true, min: 3, max: 30},
-    password: { type: String, required: true, min: 6, max: 20 },
-    token: { type: String, required: false },
-    status: { type: String, required: true, enum: ["Ativo", "Bloqueado", "Suspenso"], default: "Expirado" },
+    access_token: { type: String, required: false },
+    status: { type: String, required: false, enum: ["Expirado", "Bloqueado", "Suspenso", "Ativo"], default: "Ativo" },
 });
 
 // Virtual for authentication description and name

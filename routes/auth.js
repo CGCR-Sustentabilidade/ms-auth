@@ -8,11 +8,13 @@ const authentication_controller = require("../controllers/authenticationControll
 /// AUTHENTICATION ROUTES ///
 
 // GET request for getting verify authentication.
-router.get("/verify-authentication/:id", authentication_controller.get_verify_authentication);
+router.get("/authenticate/:id", authentication_controller.get_verify_authentication);
 // GET request for list of all authentication items.
 router.get("/list-authentications", authentication_controller.list_authentications);
 // POST request for creating an authentication ticket.
 router.post("/create-access-token", authentication_controller.post_authentication);
+// POST request for getting verify authentication.
+router.post("/login", authentication_controller.post_login);
 
 /// USER ROUTES ///
 
