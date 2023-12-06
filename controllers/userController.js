@@ -2,6 +2,7 @@ const User = require("../models/user");
 const asyncHandler = require("express-async-handler");
 const { body, validationResult } = require("express-validator");
 const { DateTime } = require("luxon");
+const utils_bcrypt = require("../utils/hash_utils")
 
 exports.index = asyncHandler(async (req, res, next) => {
   res.send("NOT IMPLEMENTED: Site Home Page");
@@ -54,18 +55,18 @@ exports.post_user = [
 
   body("login")
     .trim()
-    .isLength({ min: 1 })
-    .withMessage("Login can't be empty."),
+    .isLength({ min: 1, max: 30 })
+    .withMessage("Login can't be empty and greater than 30 characters."),
 
   body("password")
     .trim()
-    .isLength({ min: 1 })
-    .withMessage("Password can't be empty."),
+    .isLength({ min: 1, max: 20 })
+    .withMessage("Password can't be empty and greater than 20 characters."),
 
   asyncHandler(async (req, res, next) => {
     try {
       const errors = validationResult(req);
-      const hashedPassword = await bcrypt.hash(req.body.authentication.password, 10);
+      const hashedPassword = await utils_bcrypt.ConvStringToHash(req.body.user.password);
       const user = new User({
         created_at: req.body.user.created_at,
         name: req.body.user.name,

@@ -13,6 +13,8 @@ router.get("/authenticate/:id", authentication_controller.get_verify_authenticat
 router.get("/list-authentications", authentication_controller.list_authentications);
 // POST request for creating an authentication ticket.
 router.post("/create-access-token", authentication_controller.post_authentication);
+// POST request for getting verify authentication.
+router.post("/login", authentication_controller.post_login);
 
 /// USER ROUTES ///
 

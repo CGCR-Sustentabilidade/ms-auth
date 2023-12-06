@@ -1,6 +1,5 @@
 var createError = require('http-errors');
 var express = require('express');
-var cors = require('cors')
 var path = require('path');
 var dotenv = require('dotenv').config({path: __dirname + '/.env'})
 var cookieParser = require('cookie-parser');
@@ -23,11 +22,19 @@ app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'jade');
 
 app.use(logger('dev'));
-app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
+
+// CORS logic
+app.use(function(req, res, next) {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  res.setHeader('Access-Control-Allow-Credentials', true);
+  next();
+});
 
 app.use('/', indexRouter);
 app.use("/auth", authRouter); // Add auth routes to middleware chain.
