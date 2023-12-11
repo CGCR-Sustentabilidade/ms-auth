@@ -8,7 +8,7 @@ const utils_bcrypt = require("../utils/hash_utils")
 const bcrypt = require('bcrypt')
 
 exports.index = asyncHandler(async (req, res, next) => {
-  res.send("NOT IMPLEMENTED: Site Home Page");
+  res.send("NOT IMPLEMENTED");
 });
 
 // Display detail for a specific authentication.
@@ -34,7 +34,7 @@ exports.get_verify_authentication = asyncHandler(async (req, res, next) => {
 // Display list of all authentications.
 exports.list_authentications = asyncHandler(async (req, res, next) => {
   try {
-    const allAuthentications = await Authentication.find({}, "created_at name login password status type updated_at")
+    const allAuthentications = await Authentication.find({}, "created_at name login password is_active type updated_at")
       .sort({ name: 1 })
       .exec();
 
@@ -66,10 +66,10 @@ exports.post_authentication = [
       const errors = validationResult(req);
       const hashedPasswordToBeCompared = req.body.access_token.password;
       const access_token = new Authentication({
-        created_at: req.body.access_token.created_at,
-        login: req.body.access_token.login,
-        status: req.body.access_token.status,
         access_token: req.body.access_token.access_token,
+        created_at: req.body.access_token.created_at,
+        is_active: req.body.access_token.is_active,
+        login: req.body.access_token.login,
       });
 
       // Handle empty date values
@@ -122,28 +122,26 @@ exports.post_login = [
 
   asyncHandler(async (req, res, next) => {
     try {
-      console.log('body', req.body)
-      console.log('body.login_user', req.body.login_user)
       const errors = validationResult(req);
-      const passwordToBeCompared = req.body.login_user.password;
       const userToBeCompared = new Login({
         login: req.body.login_user.login,
         password: req.body.login_user.password,
       });
-
+      const passwordToBeCompared = userToBeCompared.password;
+      
       // Handle empty login values
-      if (login_user != null) {
-        if (!login_user.login)
-        login_user.login = "aaaaaaaaaaaa"
+      if (userToBeCompared != null) {
+        if (!userToBeCompared.login)
+        userToBeCompared.login = ""
       }
 
       if (errors.isEmpty()) {
-        console.log('invalid login fields')
+        console.log('Invalid Login fields!')
         const err = new Error("Invalid Login fields!");
         err.status = 400;
         return next(err);
       } else {
-        const userExists = await User.findOne({ login: req.body.login_user.login }).exec();
+        const userExists = await User.findOne({ login: userToBeCompared.login }).exec();
         if(!bcrypt.compareSync(passwordToBeCompared, userExists.password)) {
             console.log("Senha errada!")
             const err = new Error("Wrong password!");
@@ -151,7 +149,7 @@ exports.post_login = [
             return next(err);
           } else {
             await userToBeCompared.save();
-            res.status(200).json(userToBeCompared)
+            res.status(200).json({})
           }
       }
     } catch (error) {

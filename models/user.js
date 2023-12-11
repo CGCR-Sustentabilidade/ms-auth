@@ -17,10 +17,4 @@ UserSchema.virtual("description_name").get(function () {
     return this.description + " " + this.name;
 });
 
-// // Virtual for user's URL
-// UserSchema.virtual("url").get(function () {
-//     return "/system/user/" + this._id;
-// });
-
-//Export model
 module.exports = mongoose.model("User", UserSchema);
